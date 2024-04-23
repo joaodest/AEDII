@@ -1,0 +1,44 @@
+
+import java.util.Scanner;
+import java.io.*;
+
+public class Palindromo {
+
+	public static void main(String[] args) {
+		Scanner sc = new Scanner(System.in);
+		
+		String palindromo = sc.nextLine();
+		
+		boolean output;
+		
+		while(!palindromo.equals("FIM")) {
+			output = checaPalindromo(palindromo);
+			
+			if(output == true)
+				System.out.println("SIM");
+			else
+				System.out.println("NAO");
+			palindromo = sc.nextLine();
+		}
+		
+ 	}
+
+	private static boolean checaPalindromo(String palindromo) {
+				
+		int l = palindromo.length();
+		char[] temp = new char[l];
+		
+		for(int i = 0; i < l; i++) {
+			temp[i] = palindromo.charAt(l - i - 1);
+		}
+		
+		String newTemp = new String(temp);
+		
+		if(newTemp.equals(palindromo))
+			return true;
+		
+			
+		return false;
+	}
+
+}
