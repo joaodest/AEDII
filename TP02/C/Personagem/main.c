@@ -63,6 +63,26 @@ void cleanAlternateNames(char *src)
     *dst = '\0';
 }
 
+char* my_strsep(char **stringp, const char *delim)
+{
+    if (*stringp == NULL) {
+        return NULL;
+    }
+
+    char *start = *stringp;
+    char *p;
+
+    p = (delim[0] == '\0') ? NULL : strpbrk(start, delim);
+    if (p == NULL) {
+        *stringp = NULL;
+    } else {
+        *p = '\0';
+        *stringp = p + 1;
+    }
+
+    return start;
+}
+
 void lerCsv(const char* path, Personagem** personagens, int* count)
 {
     FILE* file = fopen(path, "r");
@@ -75,6 +95,7 @@ void lerCsv(const char* path, Personagem** personagens, int* count)
 
     *count = 0;
     char line[1024];
+    char *rest;
 
     fgets(line, sizeof(line), file);
     while (fgets(line, sizeof(line), file))
@@ -82,9 +103,10 @@ void lerCsv(const char* path, Personagem** personagens, int* count)
         Personagem p = {0};
         char *token;
         int index = 0;
+        rest = line;
 
-        token = strtok(line, ";");
-        while (index < 18)
+
+        while ((token = my_strsep(&rest, ";")) && index < 18)
         {
             if (token == NULL || strlen(token) == 0)
             {
@@ -147,7 +169,6 @@ void lerCsv(const char* path, Personagem** personagens, int* count)
                 assignField(p.wizard, (strcmp(token, "VERDADEIRO") == 0) ? "true" : "false", sizeof(p.wizard));
                 break;
             }
-            token = (index < 17) ? strtok(NULL, ";") : NULL;
             index++;
         }
         cleanAlternateNames(p.alternateNames);
@@ -209,16 +230,20 @@ void printPersonagem(Personagem* p)
 }
 
 
-void quicksortPersonagem(Personagem *personagens, int esq, int dir) {
-    if (esq < dir) {
+void quicksortPersonagem(Personagem *personagens, int esq, int dir)
+{
+    if (esq < dir)
+    {
         int i = esq, j = dir;
         Personagem pivot = personagens[(esq + dir) / 2];
 
-        while (i <= j) {
+        while (i <= j)
+        {
             while (strcmp(personagens[i].name, pivot.name) < 0) i++;
             while (strcmp(personagens[j].name, pivot.name) > 0) j--;
 
-            if (i <= j) {
+            if (i <= j)
+            {
                 Personagem temp = personagens[i];
                 personagens[i] = personagens[j];
                 personagens[j] = temp;
@@ -240,13 +265,16 @@ void swapPersonagem(Personagem *p1, Personagem *p2)
     *p2 = temp;
 }
 
-void printSortedPersonagens(Personagem *personagens, int count) {
-    for (int i = 0; i < count; i++) {
+void printSortedPersonagens(Personagem *personagens, int count)
+{
+    for (int i = 0; i < count; i++)
+    {
         printPersonagem(&personagens[i]);
     }
 }
 
-int main() {
+int main()
+{
     Personagem* allPersonagens = NULL;
     int totalPersonagensCount = 0;
 
@@ -258,16 +286,19 @@ int main() {
     char inputID[37];
     scanf("%36s", inputID);
 
-    while (strcmp(inputID, "FIM") != 0) {
+    while (strcmp(inputID, "FIM") != 0)
+    {
         Personagem* p = getPersonagemById(allPersonagens, totalPersonagensCount, inputID);
-        if (p != NULL) {
+        if (p != NULL)
+        {
             selectedPersonagens[selectedCount++] = *p;
         }
 
         scanf("%36s", inputID);
     }
 
-    if (selectedCount > 0) {
+    if (selectedCount > 0)
+    {
         quicksortPersonagem(selectedPersonagens, 0, selectedCount - 1);
         printSortedPersonagens(selectedPersonagens, selectedCount);
     }
