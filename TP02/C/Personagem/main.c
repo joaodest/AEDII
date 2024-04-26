@@ -206,7 +206,7 @@ void printPersonagem(Personagem* p)
     if (strcmp(p->dateOfBirth, "") != 0)
     {
         int day, month, year;
-        sscanf(p->dateOfBirth, "%d/%d/%d", &day, &month, &year);
+        sscanf(p->dateOfBirth, "%d-%d-%d", &day, &month, &year);
         sprintf(dateOfBirthFormatted, "%02d-%02d-%d", day, month, year);
     }
     printf("[%s ## %s ## {%s} ## %s ## %s ## %s ## %s ## %s ## %s ## %s ## %s ## %s ## %d ## %s ## %s ## %s ## %s]\n",
@@ -239,8 +239,8 @@ void quicksortPersonagem(Personagem *personagens, int esq, int dir)
 
         while (i <= j)
         {
-            while (strcmp(personagens[i].name, pivot.name) < 0) i++;
-            while (strcmp(personagens[j].name, pivot.name) > 0) j--;
+            while (strcmp(personagens[i].house, pivot.house) < 0) i++;
+            while (strcmp(personagens[j].house, pivot.house) > 0) j--;
 
             if (i <= j)
             {
