@@ -1,6 +1,7 @@
 
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -12,15 +13,20 @@ import java.util.Scanner;
 import java.util.UUID;
 
 public class Main {
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		Scanner sc = new Scanner(System.in);
 		Data data = new Data();
 
-		String caminhoDoArquivoCsv = "/tmp/characters.csv";
-		data.lerCsv(caminhoDoArquivoCsv);
+		String caminhoVerde = "/tmp/characters.csv";
+		String caminhoPc = "C:/Users/joaod/Downloads/characters.csv";
+		data.lerCsv(caminhoVerde);
 
 		// Q01.questao1(data, sc);
-		Q03.questao3(data, sc);
+		// Q03.questao3(data, sc);
+		// Q05.questao05(data, sc);
+		// Q07.questao07(data, sc);
+		// Q09.questao09(data, sc);
+		 Q11.questao11(data, sc);
 		sc.close();
 	}
 
@@ -46,7 +52,6 @@ class Q01 {
 			}
 		}
 	}
-
 }
 
 class Q03 {
@@ -91,6 +96,267 @@ class Q03 {
 	}
 
 }
+
+class Q05 {
+	public static void questao05(Data data, Scanner sc) {
+		ArrayList<Personagem> personagens = new ArrayList<>();
+		Personagem personagem = new Personagem();
+
+		while (sc.hasNextLine()) {
+			String input = sc.nextLine();
+
+			if (Main.isFim(input))
+				break;
+
+			personagem = data.getPersonagemById(input);
+			personagens.add(personagem);
+
+		}
+
+		selectionSort(personagens);
+
+		Data.printSortedList(personagens);
+	}
+
+	private static void selectionSort(ArrayList<Personagem> personagens) {
+		int length = personagens.size();
+		for (int i = 0; i < length; i++) {
+			int menor = i;
+			for (int j = i + 1; j < length; j++) {
+				if (Data.compareStrings(personagens.get(j).getPersonagemName(),
+						personagens.get(menor).getPersonagemName()) < 0) {
+					menor = j;
+				}
+			}
+			swap(personagens, i, menor);
+		}
+	}
+
+	public static void swap(ArrayList<Personagem> list, int index1, int index2) {
+		Personagem temp = list.get(index1);
+		list.set(index1, list.get(index2));
+		list.set(index2, temp);
+	}
+}
+
+class Q07 {
+	public static void questao07(Data data, Scanner sc) throws IOException {
+		ArrayList<Personagem> personagens = new ArrayList<>();
+		Personagem personagem = new Personagem();
+
+		while (sc.hasNextLine()) {
+			String input = sc.nextLine();
+
+			if (Main.isFim(input))
+				break;
+
+			personagem = data.getPersonagemById(input);
+			personagens.add(personagem);
+
+		}
+		long startTime = System.nanoTime();
+		int[] stats = new int[2];
+		insertionSort(personagens, stats);
+		long endTime = System.nanoTime();
+		long duration = (endTime - startTime) / 1000000;
+
+		FileWriter writer = new FileWriter("829255_insertion.txt");
+		writer.write("829255\t" + stats[0] + "\t" + stats[1] + "\t" + duration + "\n");
+		writer.close();
+
+		Data.printSortedList(personagens);
+
+	}
+
+	private static void insertionSort(ArrayList<Personagem> personagens, int[] stats) {
+		int length = personagens.size();
+		for (int i = 1; i < length; i++) {
+			Personagem current = personagens.get(i);
+			int j = i - 1;
+
+			while (j >= 0 && (compareDates(personagens.get(j).getPersonagemDate(), current.getPersonagemDate()) > 0
+					|| (compareDates(personagens.get(j).getPersonagemDate(), current.getPersonagemDate()) == 0
+							&& Data.compareStrings(personagens.get(j).getPersonagemName(),
+									current.getPersonagemName()) > 0))) {
+				personagens.set(j + 1, personagens.get(j));
+				j--;
+				stats[1]++;
+			}
+			personagens.set(j + 1, current);
+		}
+	}
+
+	private static int compareDates(String date1, String date2) {
+
+		String[] parts1 = Data.splitString(date1, '-');
+		String[] parts2 = Data.splitString(date2, '-');
+
+		int yearComparison = Data.compareStrings(parts1[2], parts2[2]);
+		if (yearComparison != 0)
+			return yearComparison;
+
+		int monthComparison = Data.compareStrings(parts1[1], parts2[1]);
+		if (monthComparison != 0)
+			return monthComparison;
+
+		return parts1[0].compareTo(parts2[0]);
+	}
+}
+
+class Q09 {
+	public static void questao09(Data data, Scanner sc) throws IOException {
+		ArrayList<Personagem> personagens = new ArrayList<>();
+		Personagem personagem;
+		while (sc.hasNextLine()) {
+			String input = sc.nextLine();
+
+			if (Main.isFim(input))
+				break;
+
+			personagem = data.getPersonagemById(input);
+			personagens.add(personagem);
+		}
+
+		long startTime = System.nanoTime();
+		int[] stats = new int[2];
+		heapSort(personagens, stats);
+		long endTime = System.nanoTime();
+		long duration = (endTime - startTime) / 1000000;
+
+		FileWriter writer = new FileWriter("829255_heapsort.txt");
+		writer.write("829255\t" + stats[0] + "\t" + stats[1] + "\t" + duration + "\n");
+		writer.close();
+
+		Data.printSortedList(personagens);
+	}
+
+	private static void heapSort(ArrayList<Personagem> personagens, int[] stats) {
+		int length = personagens.size();
+
+		for (int i = length / 2 - 1; i >= 0; i--) {
+			heapify(personagens, length, i, stats);
+		}
+
+		for (int i = length - 1; i >= 0; i--) {
+			Personagem temp = personagens.get(0);
+			personagens.set(0, personagens.get(i));
+			personagens.set(i, temp);
+			stats[1] += 3;
+
+			heapify(personagens, i, 0, stats);
+		}
+	}
+
+	private static void heapify(ArrayList<Personagem> personagens, int n, int i, int[] stats) {
+		int largest = i;
+		int left = 2 * i + 1;
+		int right = 2 * i + 2;
+
+		if (left < n) {
+			stats[0]++;
+			int compareResult = Data.compareStrings(personagens.get(left).getHairColour(),
+					personagens.get(largest).getHairColour());
+			if (compareResult > 0
+					|| (compareResult == 0 && Data.compareStrings(personagens.get(left).getPersonagemName(),
+							personagens.get(largest).getPersonagemName()) > 0)) {
+				largest = left;
+			}
+		}
+
+		if (right < n) {
+			stats[0]++;
+			int compareResult = Data.compareStrings(personagens.get(right).getHairColour(),
+					personagens.get(largest).getHairColour());
+			if (compareResult > 0
+					|| (compareResult == 0 && Data.compareStrings(personagens.get(right).getPersonagemName(),
+							personagens.get(largest).getPersonagemName()) > 0)) {
+				largest = right;
+			}
+		}
+
+		if (largest != i) {
+			Personagem swap = personagens.get(i);
+			personagens.set(i, personagens.get(largest));
+			personagens.set(largest, swap);
+			stats[1] += 3;
+
+			heapify(personagens, n, largest, stats);
+		}
+	}
+}
+
+class Q11 {
+	public static void questao11(Data data, Scanner sc) throws IOException {
+		ArrayList<Personagem> personagens = new ArrayList<>();
+		Personagem personagem;
+		while (sc.hasNextLine()) {
+			String input = sc.nextLine();
+
+			if (Main.isFim(input))
+				break;
+
+			personagem = data.getPersonagemById(input);
+			personagens.add(personagem);
+		}
+
+		long startTime = System.nanoTime();
+		int[] stats = new int[2];
+		countingSort(personagens, stats);
+		long endTime = System.nanoTime();
+		long duration = (endTime - startTime) / 1000000;
+
+		FileWriter writer = new FileWriter("829255_countingsort.txt");
+		writer.write("829255\t" + stats[0] + "\t" + stats[1] + "\t" + duration + "\n");
+		writer.close();
+
+		Data.printSortedList(personagens);
+	}
+
+	private static void countingSort(ArrayList<Personagem> personagens, int[] stats) {
+	    int minYear = Integer.MAX_VALUE;
+	    int maxYear = Integer.MIN_VALUE;
+	    for (Personagem p : personagens) {
+	        if (p.getYearOfBirth() < minYear) {
+	            minYear = p.getYearOfBirth();
+	        }
+	        if (p.getYearOfBirth() > maxYear) {
+	            maxYear = p.getYearOfBirth();
+	        }
+	    }
+
+	    int range = maxYear - minYear + 1;
+	    @SuppressWarnings("unchecked")
+		ArrayList<Personagem>[] count = new ArrayList[range];
+	    for (int i = 0; i < range; i++) {
+	        count[i] = new ArrayList<>();
+	    }
+
+	    for (Personagem p : personagens) {
+	        int index = p.getYearOfBirth() - minYear;
+	        count[index].add(p);
+	        stats[1]++;
+	    }
+
+	    for (ArrayList<Personagem> bucket : count) {
+	        if (bucket.size() > 1) {
+	            bucket.sort((p1, p2) -> {
+	                int nameComparison = p1.getPersonagemName().compareTo(p2.getPersonagemName());
+	                return nameComparison;
+	            });
+	            stats[1] += bucket.size(); 
+	        }
+	    }
+
+	    int index = 0;
+	    for (ArrayList<Personagem> bucket : count) {
+	        for (Personagem p : bucket) {
+	            personagens.set(index++, p);
+	        }
+	    }
+	}
+}
+
+
 
 class Data {
 	private List<Personagem> personagens = new ArrayList<>();
@@ -197,6 +463,30 @@ class Data {
 		result.append(input.substring(start));
 		return result.toString();
 	}
+
+	public static int compareStrings(String s1, String s2) {
+		int length1 = s1.length();
+		int length2 = s2.length();
+		int minLen = Math.min(length1, length2);
+
+		for (int i = 0; i < minLen; i++) {
+			char c1 = s1.charAt(i);
+			char c2 = s2.charAt(i);
+
+			if (c1 != c2) {
+				return c1 - c2;
+			}
+		}
+
+		return length1 - length2;
+	}
+
+	public static void printSortedList(ArrayList<Personagem> personagens) {
+		for (Personagem p : personagens) {
+			System.out.println(p);
+		}
+
+	}
 }
 
 class Personagem {
@@ -256,6 +546,19 @@ class Personagem {
 
 	public String getPersonagemName() {
 		return _name;
+	}
+
+	public String getPersonagemDate() {
+		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+		return sdf.format(_dateOfBirth);
+	}
+
+	public String getHairColour() {
+		return _hairColour;
+	}
+
+	public int getYearOfBirth() {
+		return _yearOfBirth;
 	}
 
 	@Override
