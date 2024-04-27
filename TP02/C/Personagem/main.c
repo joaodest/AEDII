@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 
 #define MAX_NAME_LEN 100
 #define MAX_HOUSE_LEN 50
@@ -36,6 +37,12 @@ typedef struct
     char wizard[MAX_BOOLEAN_RESPONSE_LEN];
 } Personagem;
 
+int comparisons = 0;
+int swaps = 0;
+
+char* caminhoVerde = "/tmp/characters.csv";
+char* caminhoPC = "C:/Users/joaod/Downloads/characters.csv";
+
 void assignField(char *field, const char *value, size_t max_len)
 {
     if (strlen(value) < max_len)
@@ -65,7 +72,8 @@ void cleanAlternateNames(char *src)
 
 char* my_strsep(char **stringp, const char *delim)
 {
-    if (*stringp == NULL) {
+    if (*stringp == NULL)
+    {
         return NULL;
     }
 
@@ -73,9 +81,12 @@ char* my_strsep(char **stringp, const char *delim)
     char *p;
 
     p = (delim[0] == '\0') ? NULL : strpbrk(start, delim);
-    if (p == NULL) {
+    if (p == NULL)
+    {
         *stringp = NULL;
-    } else {
+    }
+    else
+    {
         *p = '\0';
         *stringp = p + 1;
     }
@@ -179,7 +190,6 @@ void lerCsv(const char* path, Personagem** personagens, int* count)
     fclose(file);
 }
 
-
 Personagem* getPersonagemById(Personagem* personagens, int count, const char* id)
 {
     for (int i = 0; i < count; i++)
@@ -191,8 +201,6 @@ Personagem* getPersonagemById(Personagem* personagens, int count, const char* id
     }
     return NULL;
 }
-
-
 
 void printPersonagem(Personagem* p)
 {
@@ -230,34 +238,6 @@ void printPersonagem(Personagem* p)
 }
 
 
-void quicksortPersonagem(Personagem *personagens, int esq, int dir)
-{
-    if (esq < dir)
-    {
-        int i = esq, j = dir;
-        Personagem pivot = personagens[(esq + dir) / 2];
-
-        while (i <= j)
-        {
-            while (strcmp(personagens[i].house, pivot.house) < 0) i++;
-            while (strcmp(personagens[j].house, pivot.house) > 0) j--;
-
-            if (i <= j)
-            {
-                Personagem temp = personagens[i];
-                personagens[i] = personagens[j];
-                personagens[j] = temp;
-
-                i++;
-                j--;
-            }
-        }
-
-        if (esq < j) quicksortPersonagem(personagens, esq, j);
-        if (i < dir) quicksortPersonagem(personagens, i, dir);
-    }
-}
-
 void swapPersonagem(Personagem *p1, Personagem *p2)
 {
     Personagem temp = *p1;
@@ -273,38 +253,163 @@ void printSortedPersonagens(Personagem *personagens, int count)
     }
 }
 
-int main()
+void quicksortPersonagem(Personagem *personagens, int esq, int dir)
 {
-    Personagem* allPersonagens = NULL;
-    int totalPersonagensCount = 0;
+    if (esq < dir)
+    {
+        int i = esq, j = dir;
+        Personagem pivot = personagens[(esq + dir) / 2];
 
-    lerCsv("/tmp/characters.csv", &allPersonagens, &totalPersonagensCount);
+        while (i <= j)
+        {
+            while (strcmp(personagens[i].house, pivot.house) < 0 ||
+                    (strcmp(personagens[i].house, pivot.house) == 0 && strcmp(personagens[i].name, pivot.name) < 0))
+            {
+                comparisons++;
+                i++;
+            }
+            while (strcmp(personagens[j].house, pivot.house) > 0 ||
+                    (strcmp(personagens[j].house, pivot.house) == 0 && strcmp(personagens[j].name, pivot.name) > 0))
+            {
+                comparisons++;
+                j--;
+            }
 
-    Personagem* selectedPersonagens = malloc(sizeof(Personagem) * totalPersonagensCount);
-    int selectedCount = 0;
+            if (i <= j)
+            {
+                Personagem temp = personagens[i];
+                personagens[i] = personagens[j];
+                personagens[j] = temp;
+                swaps++;
 
+                i++;
+                j--;
+            }
+        }
+
+        if (esq < j) quicksortPersonagem(personagens, esq, j);
+        if (i < dir) quicksortPersonagem(personagens, i, dir);
+    }
+}
+
+void selectionSortRecursive(Personagem *personagens, int n, int index)
+{
+    if (index == n - 1)
+    {
+        return;
+    }
+
+    int menor = index;
+    for (int i = index + 1; i < n; i++)
+    {
+        comparisons++;
+        if (strcmp(personagens[i].name, personagens[menor].name) < 0)
+        {
+            menor = i;
+        }
+    }
+
+    if (menor != index)
+    {
+        swapPersonagem(&personagens[index], &personagens[menor]);
+        swaps++;
+    }
+
+    selectionSortRecursive(personagens, n, index + 1);
+}
+
+void shellSort(Personagem *personagens, int n)
+{
+    int i, j, k;
+    Personagem temp;
+
+    int gaps[] = {701, 301, 132, 57, 23, 10, 4, 1}; // Sequência de Sedgewick
+    int totalGaps = sizeof(gaps) / sizeof(gaps[0]);
+
+    for(k = 0; k < totalGaps; k++)
+    {
+        int gap = gaps[k];
+        for(i = gap; i < n; i++)
+        {
+            temp = personagens[i];
+            j = i;
+
+            while (j >= gap && (strcmp(personagens[j - gap].eyeColour, temp.eyeColour) > 0 ||
+                                (strcmp(personagens[j - gap].eyeColour, temp.eyeColour) == 0 &&
+                                 strcmp(personagens[j - gap].name, temp.name) > 0)))
+            {
+                personagens[j] = personagens[j - gap];
+                j -= gap;
+                swaps++;
+                comparisons++;
+            }
+            if (j != i)
+            {
+                personagens[j] = temp;
+                swaps++;
+            }
+        }
+    }
+
+}
+
+void readInputs(Personagem *personagens, int totalPersonagensCount, Personagem **selectedPersonagens, int *selectedCount)
+{
     char inputID[37];
     scanf("%36s", inputID);
 
     while (strcmp(inputID, "FIM") != 0)
     {
-        Personagem* p = getPersonagemById(allPersonagens, totalPersonagensCount, inputID);
+        Personagem* p = getPersonagemById(personagens, totalPersonagensCount, inputID);
         if (p != NULL)
         {
-            selectedPersonagens[selectedCount++] = *p;
+            (*selectedPersonagens)[(*selectedCount)++] = *p;
         }
-
         scanf("%36s", inputID);
     }
+}
 
-    if (selectedCount > 0)
+void arraySortAndLog(Personagem *personagens, int personagensCount)
+{
+    clock_t start = clock();
+    shellSort(personagens, personagensCount);
+    clock_t end = clock();
+
+    double time_spent = (double)(end - start) / CLOCKS_PER_SEC * 1000;
+    FILE *logFile = fopen("829255_shellsort.txt", "w");
+    if (logFile != NULL)
     {
-        quicksortPersonagem(selectedPersonagens, 0, selectedCount - 1);
-        printSortedPersonagens(selectedPersonagens, selectedCount);
+        fprintf(logFile, "829255\t%d\t%d\t%f\n", comparisons, swaps, time_spent);
+        fclose(logFile);
     }
+}
 
+Personagem* initializeData(char* path, int* count)
+{
+    Personagem *personagens;
+    lerCsv(path, &personagens, count);
+    return personagens;
+}
+
+void clear(Personagem *allPersonagens, Personagem *selectedPersonagens)
+{
     free(allPersonagens);
     free(selectedPersonagens);
+}
+
+int main()
+{
+    int totalPersonagensCount = 0;
+    Personagem* allPersonagens = initializeData(caminhoVerde, &totalPersonagensCount);
+    Personagem* selectedPersonagens = malloc(sizeof(Personagem) * totalPersonagensCount);
+    int selectedCount = 0;
+
+    readInputs(allPersonagens, totalPersonagensCount, &selectedPersonagens, &selectedCount);
+    arraySortAndLog(selectedPersonagens, selectedCount);
+
+    printSortedPersonagens(selectedPersonagens, selectedCount);
+
+    clear(allPersonagens, selectedPersonagens);
     return 0;
 }
 

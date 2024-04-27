@@ -1,0 +1,8 @@
+# depslib dependency file v1.0
+1714256938 source:c:\users\joaod\source\aedsii\tp02\c\personagem\main.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<stdbool.h>
+	<time.h>
+
