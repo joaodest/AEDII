@@ -15,6 +15,9 @@
 #define MAX_HAIR_COLOUR_LEN 30
 #define MAX_ALTERNATE_NAMES_LEN 200
 #define MAX_DATE_LEN 11
+#define MAX_LEN 37
+#define NUM_CHARS 256
+#define NUM_UUIDS 405
 
 typedef struct
 {
@@ -39,9 +42,6 @@ typedef struct
 
 int comparisons = 0;
 int swaps = 0;
-
-char* caminhoVerde = "/tmp/characters.csv";
-char* caminhoPC = "C:/Users/joaod/Downloads/characters.csv";
 
 void assignField(char *field, const char *value, size_t max_len)
 {
@@ -250,7 +250,14 @@ void printSortedPersonagens(Personagem *personagens, int count)
     for (int i = 0; i < count; i++)
     {
         printPersonagem(&personagens[i]);
+        //printf("qtd impressa: %d\n", count);
+
     }
+}
+
+int getDigit(const char *id, int pos)
+{
+    return id[pos];
 }
 
 void quicksortPersonagem(Personagem *personagens, int esq, int dir)
@@ -353,6 +360,70 @@ void shellSort(Personagem *personagens, int n)
 
 }
 
+void bubbleSort(Personagem *personagens, int n)
+{
+    bool swapped;
+    for(int i = 0; i < n - 1; i++)
+    {
+        swapped = false;
+        for(int j = 0; j < n - 1; j++)
+        {
+            comparisons++;
+            if (strcmp(personagens[j].hairColour, personagens[j + 1].hairColour) > 0 ||
+                    (strcmp(personagens[j].hairColour, personagens[j + 1].hairColour) == 0 &&
+                     strcmp(personagens[j].name, personagens[j + 1].name) > 0))
+            {
+                swapPersonagem(&personagens[j], &personagens[j+1]);
+                swaps++;
+                swapped = true;
+            }
+        }
+
+        if(!swapped) break;
+    }
+}
+
+void radixSort(Personagem *personagens, int n, int tam)
+{
+    Personagem *temp = (Personagem *)malloc(n * sizeof(Personagem));
+    if (temp == NULL)
+    {
+        printf("Erro ao alocar memória.\n");
+        return;
+    }
+
+    for (int pos = tam - 1; pos >= 0; pos--)
+    {
+        int count[NUM_CHARS] = {0};
+
+        for (int i = 0; i < n; i++)
+        {
+            int digit = getDigit(personagens[i].id, pos);
+            count[digit]++;
+            comparisons++;
+        }
+
+        for (int i = 1; i < NUM_CHARS; i++)
+        {
+            count[i] += count[i - 1];
+        }
+
+        for (int i = n - 1; i >= 0; i--)
+        {
+            int digit = getDigit(personagens[i].id, pos);
+            temp[--count[digit]] = personagens[i];
+            swaps++;
+        }
+
+        for (int i = 0; i < n; i++)
+        {
+            personagens[i] = temp[i];
+        }
+    }
+
+    free(temp);
+}
+
 void readInputs(Personagem *personagens, int totalPersonagensCount, Personagem **selectedPersonagens, int *selectedCount)
 {
     char inputID[37];
@@ -372,16 +443,17 @@ void readInputs(Personagem *personagens, int totalPersonagensCount, Personagem *
 void arraySortAndLog(Personagem *personagens, int personagensCount)
 {
     clock_t start = clock();
-    shellSort(personagens, personagensCount);
+    radixSort(personagens, personagensCount, MAX_LEN - 1);
     clock_t end = clock();
 
     double time_spent = (double)(end - start) / CLOCKS_PER_SEC * 1000;
-    FILE *logFile = fopen("829255_shellsort.txt", "w");
+    FILE *logFile = fopen("829255_radixsort.txt", "w");
     if (logFile != NULL)
     {
         fprintf(logFile, "829255\t%d\t%d\t%f\n", comparisons, swaps, time_spent);
         fclose(logFile);
     }
+
 }
 
 Personagem* initializeData(char* path, int* count)
@@ -399,6 +471,9 @@ void clear(Personagem *allPersonagens, Personagem *selectedPersonagens)
 
 int main()
 {
+    char* caminhoVerde = "/tmp/characters.csv";
+    char* caminhoPC = "C:/Users/joaod/Downloads/characters.csv";
+
     int totalPersonagensCount = 0;
     Personagem* allPersonagens = initializeData(caminhoVerde, &totalPersonagensCount);
     Personagem* selectedPersonagens = malloc(sizeof(Personagem) * totalPersonagensCount);
@@ -412,4 +487,3 @@ int main()
     clear(allPersonagens, selectedPersonagens);
     return 0;
 }
-
